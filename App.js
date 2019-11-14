@@ -3,7 +3,7 @@ import { Button, Image, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
-import Clarifai from 'clarifai';
+
 
 export default class ImagePickerExample extends React.Component {
   state = {
@@ -47,7 +47,7 @@ export default class ImagePickerExample extends React.Component {
 
     if (!result.cancelled) {
       this.setState({ image: result.uri });
-      this.analizePhoto(result.base64);
+      this.identifyImage(result.base64);
     }
     
   };
@@ -57,21 +57,23 @@ export default class ImagePickerExample extends React.Component {
   
     if (!result.cancelled) {
       this.setState({ image: result.uri });
-      this.analizePhoto(result.base64);
+      this.identifyImage(result.base64);
     }
   };
 
-  analizePhoto = (base64Photo) => {
-    
-    clarifaiApp.models.predict(Clarifai.FOOD_MODEL, { base64: base64Photo }).then(
-    function(response) {
-      console.log(response.data.concepts);
-    },
-    function(err) {
-      console.log(err);
-      // there was an error
-    }
-  );
+  identifyImage(imageData){
+    const Clarifai = require('clarifai');
+    const app = new Clarifai.App({apiKey: '5234ecbf19af4f7ea6bf659ebe861907'});
+    app.models.predict(Clarifai.FOOD_MODEL, {base64: imageData})
+        .then((response) =>  this.parseResponse(response)
+        .catch((err) => alert(err))
+    );
+}
+
+  parseResponse(response){
+    response.outputs[0].data.concepts.map((item, key) =>
+    console.log(item.name+" : "+item.value)
+    )
   }
   
 }
@@ -83,12 +85,6 @@ let options = {
   quality: 1,
   base64: true
 }
-
-
-const clarifaiApp = new Clarifai.App({
- apiKey: '5234ecbf19af4f7ea6bf659ebe861907'
-});
-
 
 const divStyle = {
   margin: 100
