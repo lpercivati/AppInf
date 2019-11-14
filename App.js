@@ -1,70 +1,95 @@
-import React from "react";
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
-import * as Permissions from "expo-permissions";
-import { Camera } from "expo-camera";
-import { white } from "ansi-colors";
+import * as React from 'react';
+import { Button, Image, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
+import * as Permissions from 'expo-permissions';
+import Clarifai from 'clarifai';
 
-export default class App extends React.Component {
+export default class ImagePickerExample extends React.Component {
   state = {
-    showCamera: false
-  };
-
-  takePicture = async () => {
-    try {
-      console.log("PICTURE ATTEMPT");
-      const data = await this.camera.capture();
-      console.log("PICTURE TAKEN");
-      Alert.alert("Path to image: " + data.uri, "ok");
-    } catch (err) {
-      console.log("PICTURE FAILED", err);
-    }
+    image: null,
   };
 
   render() {
-    if (!this.state.showCamerashowCamera) {
-      return (
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            height: "100%"
-          }}
-        >
-          <TouchableOpacity onPress={() => this.setState({ showCamera: true })}>
-            <Text>SHOW CAMERA</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+    let { image } = this.state;
 
     return (
-      <View style={{ flex: 1 }}>
-        <Camera
-          ref={cam => {
-            this.camera = cam;
-          }}
-          style={{ flex: 1 }}
-          type={Camera.Constants.Type.back}
-        >
-          <TouchableOpacity onPress={this.takePicture}>
-            <Text style={{ color: "white", fontSize: 30, marginTop: 150 }}>
-              TAKE PICTURE
-            </Text>
-          </TouchableOpacity>
-        </Camera>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Button style={{ marginBottom:100 }}
+          title="Pick an image from camera roll"
+          onPress={this._pickImage}
+        />
+
+        <Button style={divStyle}
+          title="Open camera"
+          onPress={this._takePhoto}
+        />
+
+        {image &&
+          <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
       </View>
     );
   }
+
+  componentDidMount() {
+    this.getPermissionAsync();
+  }
+
+  getPermissionAsync = async () => {
+    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+  }
+
+  _pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync(options);
+
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+      this.analizePhoto(result.base64);
+    }
+    
+  };
+
+  _takePhoto = async () => {
+    let result = await ImagePicker.launchCameraAsync(options);
+  
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+      this.analizePhoto(result.base64);
+    }
+  };
+
+  analizePhoto = (base64Photo) => {
+    
+    clarifaiApp.models.predict(Clarifai.FOOD_MODEL, { base64: base64Photo }).then(
+    function(response) {
+      console.log(response.data.concepts);
+    },
+    function(err) {
+      console.log(err);
+      // there was an error
+    }
+  );
+  }
+  
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  buttonContainer: {
-    margin: 115
-  }
+let options = {
+  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+  allowsEditing: true,
+  aspect: [16, 9],
+  quality: 1,
+  base64: true
+}
+
+
+const clarifaiApp = new Clarifai.App({
+ apiKey: '5234ecbf19af4f7ea6bf659ebe861907'
 });
+
+
+const divStyle = {
+  margin: 100
+};
