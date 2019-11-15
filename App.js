@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Image, View, Alert, StyleSheet, Text } from 'react-native';
+import { Button, Image, View, Alert, StyleSheet, Text, ScrollView, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
@@ -10,13 +10,16 @@ export default class ImagePickerExample extends React.Component {
     image: null,
     mostrarResultados: false,
     filas: [],
-    tableHead: ["Alimento", "Porcentaje"]
+    tableHead: ["Alimento", "Porcentaje"],
+    animating: false
   };
 
   render() {
 
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: 'center'}}>
+        <Text style={{ fontSize:30, paddingTop:50 }}>ComidApp!</Text>
+
         { this.renderizar() }
       </View>
     );
@@ -24,17 +27,23 @@ export default class ImagePickerExample extends React.Component {
   }
 
   renderizar(){
-    let { image } = this.state;
-
     if(this.state.mostrarResultados){
       return(
       <View style={styles.container}>
-        <Text>Reconocimiento de imagenes</Text>
-        
-        <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
-          <Row data={this.state.tableHead} style={styles.head} textStyle={styles.text}/>
-          <Rows data={this.state.filas} textStyle={styles.text}/>
-        </Table>
+         <ActivityIndicator
+               animating = {this.state.animating}
+               color = '#bc2b78'
+               size = "large"/>
+
+        <Image source={{ uri: this.state.image }} style={{ width: 200, height: 200 }} />
+        <ScrollView>
+          <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
+            <Row data={this.state.tableHead} style={styles.head} textStyle={styles.text}/>
+            <Rows data={this.state.filas} textStyle={styles.text}/>
+          </Table>
+        </ScrollView>
+
+        <Button title="Back" onPress={this.irAInicio} />
       </View>
       )
 
@@ -42,11 +51,10 @@ export default class ImagePickerExample extends React.Component {
       return (
       <View >
       
-        <Button style={{ marginBottom:100 }} title="Pick an image from camera roll" onPress={this._pickImage} />
+        <Button style={{ marginBottom:100 }} title="Pick an image galery" onPress={this.abrirGaleria} />
 
-        <Button style={divStyle} title="Open camera" onPress={this._takePhoto} />
+        <Button style={{ marginTop: 100 }} title="Open camera" onPress={this.abrirCamara} />
 
-        {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
       
       </View>
       )
@@ -64,35 +72,46 @@ export default class ImagePickerExample extends React.Component {
       }
   }
 
-  _pickImage = async () => {
+  abrirGaleria = async () => {
     let result = await ImagePicker.launchImageLibraryAsync(options);
 
     if (!result.cancelled) {
-      this.identifyImage(result.base64);
+      this.identificarImagen(result.base64, result.uri);
     }
   };
 
-  _takePhoto = async () => {
+  abrirCamara = async () => {
     let result = await ImagePicker.launchCameraAsync(options);
   
     if (!result.cancelled) {
-      this.identifyImage(result.base64);
+      this.identificarImagen(result.base64, result.uri);
     }
   };
 
-  identifyImage(imageData){
-    app.models.predict(Clarifai.FOOD_MODEL, {base64: imageData})
+  irAInicio = ()=> {
+    this.setState({
+      mostrarResultados: false
+    })
+  }
+
+  identificarImagen(imageDataBase64, imageUri){
+    this.setState({
+      animating: true
+    });
+
+    app.models.predict(Clarifai.FOOD_MODEL, {base64: imageDataBase64})
         .then((response) => {
-          this.parseResponse(response)
+          this.setState({
+            animating: false,
+            image: imageUri,
+            mostrarResultados: true,
+            filas: response.outputs[0].data.concepts
+              .filter(item => item.value > 0.6)
+              .map(item => [item.name, (item.value * 100).toFixed(2) + "%"])
+              //.map(item => [translate(item.name, {to: "es"}), (item.value * 100).toFixed(2) + "%"])
+          })
         })
         .catch((err) => alert(err));
-}
-
-  parseResponse(response){
-    this.setState({
-      mostrarResultados: true,
-      filas: response.outputs[0].data.concepts.map(item => [item.name, item.value])
-    })
   }
   
 }
@@ -104,10 +123,6 @@ let options = {
   quality: 1,
   base64: true
 }
-
-const divStyle = {
-  margin: 100
-};
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: '#fff' },
