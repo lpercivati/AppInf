@@ -70,6 +70,10 @@ export default class ImagePickerExample extends React.Component {
               <Icon raised size={50} name='image' type='font-awesome' color='#630090' onPress={this.abrirGaleria} />
 
             </View>
+            <ActivityIndicator
+               animating = {this.state.animating}
+               color = '#bc2b78'
+               size = "large"/>
             <View style={styles.box} >
               <Icon raised size={50} name='camera-retro' type='font-awesome' color='#630090' onPress={this.abrirCamara} />
 
@@ -85,7 +89,8 @@ export default class ImagePickerExample extends React.Component {
 
   getPermissionAsync = async () => {
     const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
-      if (status !== 'granted') {
+    const { statusCamera } = await Permissions.askAsync(Permissions.CAMERA);
+      if (status !== 'granted' && statusCamera !== 'granted') {
         alert('Sorry, we need camera roll permissions to make this work!');
       }
   }
@@ -100,7 +105,6 @@ export default class ImagePickerExample extends React.Component {
 
   abrirCamara = async () => {
     let result = await ImagePicker.launchCameraAsync(options);
-  
     if (!result.cancelled) {
       this.identificarImagen(result.base64, result.uri);
     }
