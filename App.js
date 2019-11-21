@@ -1,9 +1,15 @@
 import * as React from 'react';
-import { Button, Image, View, Alert, StyleSheet, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { Button, Image, View, Alert, StyleSheet, Text, ScrollView, ActivityIndicator, ImageBackground, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
+import { Icon } from 'react-native-elements'
 import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+
+var { height } = Dimensions.get('window');
+ 
+var box_count = 3;
+var box_height = height / box_count;
 
 export default class ImagePickerExample extends React.Component {
   state = {
@@ -17,10 +23,15 @@ export default class ImagePickerExample extends React.Component {
   render() {
 
     return (
-      <View style={{ flex: 1, alignItems: 'center'}}>
-        <Text style={{ fontSize:30, paddingTop:50 }}>ComidApp!</Text>
+      <View style={styles.container}>
+        <ImageBackground source={require('../AppInf/assets/fondo.jpg')} style={{width: '100%', height: '100%'}}>
 
-        { this.renderizar() }
+        <View style={styles.boxTitle}>
+           <Text style={{ fontSize:30, paddingTop:50 }}>FoodApp!</Text>
+        </View>
+          { this.renderizar() }
+
+        </ImageBackground>
       </View>
     );
      
@@ -29,7 +40,7 @@ export default class ImagePickerExample extends React.Component {
   renderizar(){
     if(this.state.mostrarResultados){
       return(
-      <View style={styles.container}>
+      <View style={{ flex:5 }}>
          <ActivityIndicator
                animating = {this.state.animating}
                color = '#bc2b78'
@@ -49,14 +60,16 @@ export default class ImagePickerExample extends React.Component {
 
     }else{
       return (
-      <View >
-      
-        <Button style={{ marginBottom:100 }} title="Pick an image galery" onPress={this.abrirGaleria} />
+        <View style={{ flex:5 }}>
+            <View style={styles.box}>
+              <Icon raised size={50} name='image' type='font-awesome' color='#630090' onPress={this.abrirGaleria} />
 
-        <Button style={{ marginTop: 100 }} title="Open camera" onPress={this.abrirCamara} />
+            </View>
+            <View style={styles.box} >
+              <Icon raised size={50} name='camera-retro' type='font-awesome' color='#630090' onPress={this.abrirCamara} />
 
-      
-      </View>
+            </View>
+        </View>
       )
     }
   }
@@ -95,9 +108,9 @@ export default class ImagePickerExample extends React.Component {
   }
 
   identificarImagen(imageDataBase64, imageUri){
-    this.setState({
+    /*this.setState({
       animating: true
-    });
+    });*/
 
     app.models.predict(Clarifai.FOOD_MODEL, {base64: imageDataBase64})
         .then((response) => {
@@ -119,15 +132,25 @@ export default class ImagePickerExample extends React.Component {
 let options = {
   mediaTypes: ImagePicker.MediaTypeOptions.Images,
   allowsEditing: true,
-  aspect: [16, 9],
-  quality: 1,
+  aspect: [4, 3],
+  quality: 0.5,
   base64: true
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: '#fff' },
+  container: { flex: 1, flexDirection: "column" },
   head: { height: 40, backgroundColor: '#f1f8ff' },
-  text: { margin: 6 }
+  text: { margin: 6 },
+  box: {
+    justifyContent: "center",
+    alignItems:"center", 
+    flex: 5
+  },
+  boxTitle:{
+    justifyContent: "center",
+    alignItems:"center", 
+    flex: 1
+  }
 });
 
 const Clarifai = require('clarifai');
