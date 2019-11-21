@@ -27,7 +27,7 @@ export default class ImagePickerExample extends React.Component {
         <ImageBackground source={require('../AppInf/assets/fondo.jpg')} style={{width: '100%', height: '100%'}}>
 
         <View style={styles.boxTitle}>
-           <Text style={{ fontSize:30, paddingTop:50 }}>FoodApp!</Text>
+           <Text style={{ fontSize:30}}>FoodApp!</Text>
         </View>
           { this.renderizar() }
 
@@ -40,27 +40,32 @@ export default class ImagePickerExample extends React.Component {
   renderizar(){
     if(this.state.mostrarResultados){
       return(
-      <View style={{ flex:5 }}>
+      <View style={{ flex:8 }}>
          <ActivityIndicator
                animating = {this.state.animating}
                color = '#bc2b78'
                size = "large"/>
 
-        <Image source={{ uri: this.state.image }} style={{ width: 200, height: 200 }} />
-        <ScrollView>
-          <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
-            <Row data={this.state.tableHead} style={styles.head} textStyle={styles.text}/>
-            <Rows data={this.state.filas} textStyle={styles.text}/>
-          </Table>
-        </ScrollView>
-
-        <Button title="Back" onPress={this.irAInicio} />
+        <View style={{ flex: 2, justifyContent: "flex-start", alignItems:"center", marginBottom:10 }}>
+          <Image source={{ uri: this.state.image }} style={{ width: 200, height: 200, paddingBottom:20, borderColor:"#f1f8ff", borderWidth:1 }} />
+        </View>
+        <View style={{ flex:3}}>
+          <ScrollView>
+            <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
+              <Row data={this.state.tableHead} style={styles.head} textStyle={styles.text}/>
+              <Rows data={this.state.filas} textStyle={styles.text}/>
+            </Table>
+          </ScrollView>
+        </View>
+        <View style={{flex:1, marginTop: 10, justifyContent: "flex-end",  alignItems:"center" }}>
+          <Icon raised size={30} name='arrow-left' type='font-awesome' color='#630090' onPress={this.irAInicio} />
+        </View>
       </View>
       )
 
     }else{
       return (
-        <View style={{ flex:5 }}>
+        <View style={{ flex:8 }}>
             <View style={styles.box}>
               <Icon raised size={50} name='image' type='font-awesome' color='#630090' onPress={this.abrirGaleria} />
 
@@ -108,9 +113,9 @@ export default class ImagePickerExample extends React.Component {
   }
 
   identificarImagen(imageDataBase64, imageUri){
-    /*this.setState({
+    this.setState({
       animating: true
-    });*/
+    });
 
     app.models.predict(Clarifai.FOOD_MODEL, {base64: imageDataBase64})
         .then((response) => {
@@ -147,7 +152,7 @@ const styles = StyleSheet.create({
     flex: 5
   },
   boxTitle:{
-    justifyContent: "center",
+    justifyContent: "flex-end",
     alignItems:"center", 
     flex: 1
   }
