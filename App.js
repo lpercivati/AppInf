@@ -27,7 +27,7 @@ export default class ImagePickerExample extends React.Component {
         <ImageBackground source={require('../AppInf/assets/fondo.jpg')} style={{width: '100%', height: '100%'}}>
 
         <View style={styles.boxTitle}>
-           <Text style={{ fontSize:30}}>FoodApp!</Text>
+           <Text style={{ fontSize:40, fontFamily: "sans-serif-condensed", textShadowColor:"#c8e1ff", textShadowRadius:15 }}>FoodApp!</Text>
         </View>
           { this.renderizar() }
 
