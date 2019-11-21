@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
 import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import * as ImageManipulator from 'expo-image-manipulator';
+
 
 export default class ImagePickerExample extends React.Component {
   state = {
@@ -52,10 +54,7 @@ export default class ImagePickerExample extends React.Component {
       <View >
       
         <Button style={{ marginBottom:100 }} title="Pick an image galery" onPress={this.abrirGaleria} />
-
         <Button style={{ marginTop: 100 }} title="Open camera" onPress={this.abrirCamara} />
-
-      
       </View>
       )
     }
@@ -94,16 +93,28 @@ export default class ImagePickerExample extends React.Component {
     })
   }
 
-  identificarImagen(imageDataBase64, imageUri){
+  resize = async photo => {
+    let manipulatedImage = await ImageManipulator.manipulate(
+      photo,
+      [{ resize: { height: 300, width: 300 } }],
+      { base64: true }
+    )
+    .catch((err) => alert(err));
+    return manipulatedImage.base64;
+  };
+
+  identificarImagen = async (imageDataBase64, imageUri) => {
     this.setState({
       animating: true
     });
 
-    app.models.predict(Clarifai.FOOD_MODEL, {base64: imageDataBase64})
+    let resizedphoto = await this.resize(imageDataBase64);
+
+    app.models.predict(Clarifai.FOOD_MODEL, {base64: resizedphoto})
         .then((response) => {
           this.setState({
             animating: false,
-            image: imageUri,
+            image: resizedphoto.uri,
             mostrarResultados: true,
             filas: response.outputs[0].data.concepts
               .filter(item => item.value > 0.6)
@@ -112,8 +123,7 @@ export default class ImagePickerExample extends React.Component {
           })
         })
         .catch((err) => alert(err));
-  }
-  
+  };
 }
 
 let options = {
