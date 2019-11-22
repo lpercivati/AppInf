@@ -5,6 +5,8 @@ import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
 import { Icon } from 'react-native-elements'
 import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
 
 var { height } = Dimensions.get('window');
  
@@ -60,6 +62,9 @@ export default class ImagePickerExample extends React.Component {
         <View style={{flex:1, marginTop: 10, justifyContent: "flex-end",  alignItems:"center" }}>
           <Icon raised size={30} name='arrow-left' type='font-awesome' color='#630090' onPress={this.irAInicio} />
         </View>
+        <View style={{flex:1, marginTop: 10, justifyContent: "flex-end",  alignItems:"flex-start" }}>
+          <Icon raised size={30} name='arrow-down' type='font-awesome' color='#630090' onPress={this.saveFile} />
+        </View>
       </View>
       )
 
@@ -81,6 +86,30 @@ export default class ImagePickerExample extends React.Component {
         </View>
       )
     }
+  }
+
+  /*saveFile(){
+    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    if (status === "granted") {
+        let fileUri = FileSystem.documentDirectory + "text.txt";
+        await FileSystem.writeAsStringAsync(fileUri, "Hello World", { encoding: FileSystem.EncodingType.UTF8 });
+        const asset = await MediaLibrary.createAssetAsync(fileUri)
+        await MediaLibrary.createAlbumAsync("Download", asset, false)
+    }
+  }*/
+
+  saveFile = async ()=> {
+    console.log(this.state.filas.join("\n"));
+
+      let fileUri = FileSystem.documentDirectory + "text.txt";
+      const  write  = await FileSystem.writeAsStringAsync(fileUri, "HOLA", { encoding: FileSystem.EncodingType.UTF8 });
+      const asset = await MediaLibrary.createAssetAsync(fileUri)
+      await MediaLibrary.createAlbumAsync("Download", asset, false)
+    
+  }
+
+  writeFile(info) {
+    this.getPermissionAsync();
   }
 
   componentDidMount() {
@@ -134,8 +163,7 @@ export default class ImagePickerExample extends React.Component {
           })
         })
         .catch((err) => alert(err));
-  }
-  
+  }  
 }
 
 let options = {

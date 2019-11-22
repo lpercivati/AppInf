@@ -21,7 +21,8 @@
     "react-native-elements": "^1.2.7",
     "react-native-image-picker": "^0.28.1",
     "react-native-table-component": "^1.2.1",
-    "react-native-web": "^0.11.7"
+    "react-native-web": "^0.11.7",
+    "expo-media-library": "~7.0.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^7.1.0"
