@@ -59,11 +59,9 @@ export default class ImagePickerExample extends React.Component {
             </Table>
           </ScrollView>
         </View>
-        <View style={{flex:1, marginTop: 10, justifyContent: "flex-end",  alignItems:"center" }}>
-          <Icon raised size={30} name='arrow-left' type='font-awesome' color='#630090' onPress={this.irAInicio} />
-        </View>
-        <View style={{flex:1, marginTop: 10, justifyContent: "flex-end",  alignItems:"flex-start" }}>
-          <Icon raised size={30} name='arrow-down' type='font-awesome' color='#630090' onPress={this.saveFile} />
+        <View >
+          <Icon raised size={30} name='arrow-left' type='font-awesome' color='#630090' onPress={this.irAInicio} style={{alignItems:"flex-end" }}/>
+          <Icon raised size={30} name='arrow-down' type='font-awesome' color='#630090' onPress={this.saveFile} style={{alignItems:"flex-start" }}/>
         </View>
       </View>
       )
@@ -98,18 +96,23 @@ export default class ImagePickerExample extends React.Component {
     }
   }*/
 
-  saveFile = async ()=> {
-    console.log(this.state.filas.join("\n"));
-
-      let fileUri = FileSystem.documentDirectory + "text.txt";
-      const  write  = await FileSystem.writeAsStringAsync(fileUri, "HOLA", { encoding: FileSystem.EncodingType.UTF8 });
-      const asset = await MediaLibrary.createAssetAsync(fileUri)
-      await MediaLibrary.createAlbumAsync("Download", asset, false)
-    
+  saveFile = async () => {
+    let contenFile = this.createContentFile(this.state.filas.join("\n"));
+    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    if (status === "granted") {
+        let fileUri = FileSystem.documentDirectory + "image_analysis.txt";
+        await FileSystem.writeAsStringAsync(fileUri, contenFile, { encoding: FileSystem.EncodingType.UTF8 });
+        const asset = await MediaLibrary.createAssetAsync(fileUri)
+        await MediaLibrary.createAlbumAsync("Download", asset, false)
+    }
   }
 
-  writeFile(info) {
-    this.getPermissionAsync();
+
+
+  createContentFile(info) {
+    var header = "IMAGE ANALYSIS: \n========================\n"
+    var result = `${header}${info}`; 
+    return result;
   }
 
   componentDidMount() {
@@ -163,6 +166,7 @@ export default class ImagePickerExample extends React.Component {
           })
         })
         .catch((err) => alert(err));
+        
   }  
 }
 
