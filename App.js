@@ -3,9 +3,10 @@ import { Image, View, Alert, StyleSheet, Text, ScrollView, ActivityIndicator, Im
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 import { Icon } from 'react-native-elements'
-import { Table, TableWrapper, Row, Rows, Col, Cols, Cell } from 'react-native-table-component';
+import { Table, Row, Rows } from 'react-native-table-component';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
+import Clarifai from 'clarifai';
 
 
 export default class ImagePickerExample extends React.Component {
@@ -44,16 +45,16 @@ export default class ImagePickerExample extends React.Component {
           <Image source={{ uri: this.state.image }} style={styles.imagen} />
         </View>
         <View style={{ flex:3}}>
-          { this.state.animating &&
-            <View style={ styles.loading }>
+          { this.state.animating ?
+            (<View style={ styles.loading }>
               <ActivityIndicator style={{opacity: this.state.animating ? 1.0 : 0.0}} animating={true} color='#bc2b78' size="large"/>
 
-            </View>
+            </View>) : null
           }
-            <Table borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}}>
+            <Table>
               <Row data={this.state.tableHead} style={styles.head} textStyle={styles.text}/>
               <ScrollView>
-                <Rows borderStyle={{borderWidth: 2, borderColor: '#c8e1ff'}} data={this.state.filas} textStyle={styles.text}/>
+                <Rows data={this.state.filas} textStyle={styles.text}/>
               </ScrollView>
 
             </Table>
@@ -61,8 +62,9 @@ export default class ImagePickerExample extends React.Component {
         <View style={styles.boxVolver}>
           <Icon raised size={30} name='arrow-left' type='font-awesome' color='#630090' onPress={this.irAInicio} />
           <Icon raised size={30} name='download' type='font-awesome' color='#630090' onPress={this.saveFile}/>
-          {this.state.lastPhoto &&
-          <Icon raised size={30} name='retweet' type='font-awesome' color='#630090' onPress={this.analizarSegundoModelo}/>
+          {this.state.lastPhoto ?
+          (<Icon raised size={30} name='retweet' type='font-awesome' color='#630090' onPress={this.analizarSegundoModelo}/>
+          ) : null
           }
         </View>
       </View>
@@ -154,22 +156,26 @@ export default class ImagePickerExample extends React.Component {
     });
 
     if(!segundaOpcion){
+      
       this.setState({
         lastPhoto: imageDataBase64
       });
 
       app.models.predict(Clarifai.FOOD_MODEL, {base64: imageDataBase64})
       .then((response) => {
+        
+        var filas = response.outputs[0].data.concepts.filter(item => item.value > 0.6).map(item => [item.name, (item.value * 100).toFixed(2) + "%"]);
+
         this.setState({
           animating: false,
           image: imageUri,
           mostrarResultados: true,
-          filas: response.outputs[0].data.concepts
-            .filter(item => item.value > 0.6)
-            .map(item => [item.name, (item.value * 100).toFixed(2) + "%"])
+          filas: filas
         })
       })
-      .catch((err) => alert(err));
+      .catch((err) =>{
+        Alert.alert("Error!");
+      });
     }else{
       app.models.predict(Clarifai.GENERAL_MODEL, {base64: this.state.lastPhoto})
       .then((response) => {
@@ -182,7 +188,10 @@ export default class ImagePickerExample extends React.Component {
             .map(item => [item.name, (item.value * 100).toFixed(2) + "%"])
         })
       })
-      .catch((err) => alert(err));
+      .catch((err) => {
+        console.log(err);
+        alert(err)
+      });
     }
   }  
 }
@@ -246,5 +255,5 @@ const styles = StyleSheet.create({
   }
 });
 
-const Clarifai = require('clarifai');
+//const Clarifai = require('clarifai');
 const app = new Clarifai.App({apiKey: '5234ecbf19af4f7ea6bf659ebe861907'});
